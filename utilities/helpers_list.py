@@ -1,6 +1,7 @@
 #
-# @desc   : arquivo auxiliar contendo funcoes de apoio a execucao dos
-#           programas
+# @desc   : helper functions 
+# @version : 1.0
+# @date : 09/11/2016
 #
 
 
@@ -71,10 +72,3 @@ def heapify(instances, n, i):
 		instances[i] = instances[maior]
 		instances[maior] = tmp
 		heapify(instances, n, maior)
-
-
-#### TEST CASE ####
-# a = [2,7,26,25,19,17,1,90,3,36]
-# build_max_heap(a, 10)
-### expected value ####
-#[90,36,26,25,19,17,1,7,3,2]#
