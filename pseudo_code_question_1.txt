@@ -1,0 +1,15 @@
+# About Pseudo-Code of Greedy Algorithm
+# ration = value / weight => p / w
+
+#### DESCRIPTION TASK ####
+# Selecionar um subconjunto de itens, de modo a maximizar
+# o valor total, garantindo que o peso total nao ultrapasse
+# a capacidade B da mochila
+
+# Main Idea
+
+# Save the data in xxx
+# Create an array to save the ration
+# Calculate the ration on each item
+# Order by ration value desc
+# Use a MaxHeap to fill the Knapsack
