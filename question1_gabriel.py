@@ -1,4 +1,6 @@
-
+#### REFERENCES ####
+# Sort complexity : http://svn.python.org/projects/python/trunk/Objects/listsort.txt
+#
 class Item(object):
     def __init__(self, value, weight):
         self.value = value

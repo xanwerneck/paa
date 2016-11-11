@@ -11,22 +11,18 @@
 #### REFERENCES ####
 # 1 - https://pt.wikipedia.org/wiki/Problema_da_mochila
 # 2 - https://rjlipton.wordpress.com/2009/02/13/polynomial-vs-exponential-time/
+# 3 - https://wiki.python.org/moin/TimeComplexity
 
 
 def integer_knap(instances, W, n):
   Solution = [[0 for x in range(n)] for y in range(W)] 
   
-
-  # Solution[w][j] = max{Solution[w-wj][j-1] + vj , Solution[w][j-1]}
-  # Solution[w-wj][j-1] + vj => Com o item j => melhor = Resultado anterior + j
-  # Solution[w][j-1] => Sem o item j => melhor = Resultado anterior
-
   for j in range(n): # number of itens
     for w in range(W): # max weight
       if instances[j][1] > (w+1):
         Solution[w][j] = Solution[w][j-1]
       else:
-        Solution[w][j] = max(Solution[w][j-1],  Solution[ w - instances[j][1] ][j-1]  + instances[j][0] )
+        Solution[w][j] = max(Solution[w][j-1],  Solution[ w - instances[j][1] ][j-1]  + instances[j][0] ) # O(2)
 
   print Solution[W-1][n-1]
 
