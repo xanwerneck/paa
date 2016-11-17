@@ -25,20 +25,21 @@ class SelectedItem(object):
 def load_itens(input):
     lines = input.splitlines()
     assert len(lines) > 2, 'empty input' 
-    header = lines[0].split(' ')
+    header = lines[0].split()
     n_itens = int(header[0])
     W = int(header[1])
     itens = []
     for i in range(n_itens):
-        row = lines[1 + i].split(' ')
+        row = lines[1 + i].split()
         id = int(row[0])
-        value = float(row[1])
-        weight = float(row[2])
+        value = int(row[1])
+        weight = int(row[2])
         conflicts = [int(i) for i in row[3:] if i != '']
         itens.append(Item(id, value, weight, conflicts))
     return itens, W
 
 def print_result(result):
+    result.sort(key=lambda i: i.item.id)
     W, profit = 0, 0
     for i in result:
         W += i.item.weight * i.frac
@@ -53,7 +54,7 @@ def fractional_knapsack(itens, W):
         if x.value == 0:
             return float('inf')
         else:
-            return x.weight / x.value
+            return float(x.weight) / float(x.value)
     itens.sort(key = comparison)
     sack_itens = []
     sack_weight = 0
@@ -61,12 +62,40 @@ def fractional_knapsack(itens, W):
         if sack_weight + i.weight <= W:
             frac = 1
         else:
-            frac = float(W - sack_weight) / i.weight
+            frac = float(W - sack_weight) / float(i.weight)
         sack_itens.append(SelectedItem(i, frac))
         sack_weight += i.weight
         if sack_weight >= W:
             break
     return sack_itens
+
+# Question 2
+def integer_knapsack(itens, W):
+    n = len(itens)
+    sack_value = [[0 for y in range(W + 1)] for x in range(n + 1)]
+    sack_itens = [[False for y in range(W + 1)] for x in range(n + 1)]
+    for i in range(1, n + 1): # O(nW)
+        for w in range(W + 1):
+            item_w = itens[i - 1].weight
+            item_v = itens[i - 1].value
+            sack_with_last_item = sack_value[i - 1][w]
+            if item_w > w:
+                sack_value[i][w] = sack_with_last_item
+            else:
+                sack_with_this_item = sack_value[i - 1][w - item_w] + item_v
+                if sack_with_this_item > sack_with_last_item:
+                    sack_value[i][w] = sack_with_this_item
+                    sack_itens[i][w] = True
+                else:
+                    sack_value[i][w] = sack_with_last_item
+    selected_itens = []
+    curr_w = W
+    for i in reversed(range(1, n + 1)): # O(n)
+        item = itens[i - 1]
+        if sack_itens[i][curr_w]:
+            curr_w -= item.weight
+            selected_itens.append(SelectedItem(item, 1))
+    return selected_itens
 
 # Main
 if __name__ == '__main__':
@@ -76,6 +105,8 @@ if __name__ == '__main__':
     itens, W = load_itens(input)
     if sys.argv[2] == '1':
         result = fractional_knapsack(itens, W)
+    elif sys.argv[2] == '2':
+        result = integer_knapsack(itens, W)
     else:
         assert false, 'invalid argument Q'
     print_result(result)
