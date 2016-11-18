@@ -1,20 +1,20 @@
-# PUC-Rio
 # PAA 2016.2
 # Alexandre Werneck
-# Gabriel de Quadros Ligneul
 
 #### REFERENCES ####
 # Sort complexity: http://svn.python.org/projects/python/trunk/Objects/listsort.txt
 
+from math import ceil
 import sys
 
 # Itens
 class Item(object):
-    def __init__(self, id, value, weight, conflicts):
-        self.id = id
+    def __init__(self, index, value, weight, conflicts):
+        self.index = index
         self.value = value
         self.weight = weight
-        self.conflicts = conflicts
+        self.conflicts_list = conflicts
+        self.conflicts = None
 
 class SelectedItem(object):
     def __init__(self, item, frac):
@@ -31,22 +31,22 @@ def load_itens(input):
     itens = []
     for i in range(n_itens):
         row = lines[1 + i].split()
-        id = int(row[0])
+        assert int(row[0]) == i + 1, 'invalid index {}'.format(id)
         value = int(row[1])
         weight = int(row[2])
-        conflicts = [int(i) for i in row[3:] if i != '']
-        itens.append(Item(id, value, weight, conflicts))
+        conflicts = [int(c) - 1 for c in row[3:]]
+        itens.append(Item(i, value, weight, conflicts))
     return itens, W
 
 def print_result(result):
-    result.sort(key=lambda i: i.item.id)
+    result.sort(key=lambda i: i.item.index)
     W, profit = 0, 0
     for i in result:
         W += i.item.weight * i.frac
         profit += i.item.value * i.frac
     print('{} {} {}'.format(len(result), W, profit))
     for i in result:
-        print('{} {}'.format(i.item.id, i.frac))
+        print('{} {}'.format(i.item.index + 1, i.frac))
 
 # Question 1
 def fractional_knapsack(itens, W):
@@ -98,16 +98,33 @@ def integer_knapsack(itens, W):
     return selected_itens
 
 # Question 3
-def conflicts_knapsack(itens, W):
-    def has_conflict(i1, i2):
-        for c in i1.conflicts:
-            if i2.id == c:
-                return True
-        for c in i2.conflicts:
-            if i1.id == c:
-                return True
-        return False
+class BitSet:
+    def __init__(self, size): # O(n)
+        self.n_words = int(ceil(size / 32.0))
+        self.data = [0 for _ in range(self.n_words)]
 
+    def add(self, index): # O(1)
+        self.data[index / 32] |= 1 << index % 32
+
+    def union_empty(self, other): # O(n)
+        assert self.n_words == other.n_words, 'invalid bitset comparison'
+        for i in range(self.n_words):
+            if self.data[i] & other.data[i] != 0:
+                return False
+        return True
+
+def conflicts_knapsack(itens, W):
+    # O(n^2)
+    for i in itens:
+        i.conflicts = BitSet(len(itens))
+
+    # O(n + m)
+    for i in itens:
+        for c in i.conflicts_list:
+            i.conflicts.add(c)
+            itens[c].conflicts.add(i.index)
+
+    # O(nlogn)
     def comparison(x):
         if x.value == 0:
             return float('inf')
@@ -115,16 +132,15 @@ def conflicts_knapsack(itens, W):
             return float(x.weight) / float(x.value)
     itens.sort(key = comparison)
 
+    # O(n^2)
+    sack_set = BitSet(len(itens))
     sack_itens = []
     sack_weight = 0
     for i in itens:
-        if sack_weight + i.weight > W:
-            continue
-        for i2 in sack_itens:
-            if has_conflict(i, i2.item):
-                continue
-        sack_itens.append(SelectedItem(i, 1))
-        sack_weight += i.weight
+        if sack_weight + i.weight <= W and i.conflicts.union_empty(sack_set):
+            sack_set.add(i.index)
+            sack_itens.append(SelectedItem(i, 1))
+            sack_weight += i.weight
     return sack_itens
 
 # Main
