@@ -97,6 +97,36 @@ def integer_knapsack(itens, W):
             selected_itens.append(SelectedItem(item, 1))
     return selected_itens
 
+# Question 3
+def conflicts_knapsack(itens, W):
+    def has_conflict(i1, i2):
+        for c in i1.conflicts:
+            if i2.id == c:
+                return True
+        for c in i2.conflicts:
+            if i1.id == c:
+                return True
+        return False
+
+    def comparison(x):
+        if x.value == 0:
+            return float('inf')
+        else:
+            return float(x.weight) / float(x.value)
+    itens.sort(key = comparison)
+
+    sack_itens = []
+    sack_weight = 0
+    for i in itens:
+        if sack_weight + i.weight > W:
+            continue
+        for i2 in sack_itens:
+            if has_conflict(i, i2.item):
+                continue
+        sack_itens.append(SelectedItem(i, 1))
+        sack_weight += i.weight
+    return sack_itens
+
 # Main
 if __name__ == '__main__':
     assert len(sys.argv) == 3, 'invalid number of arguments'
@@ -107,6 +137,8 @@ if __name__ == '__main__':
         result = fractional_knapsack(itens, W)
     elif sys.argv[2] == '2':
         result = integer_knapsack(itens, W)
+    elif sys.argv[2] == '3':
+        result = conflicts_knapsack(itens, W)
     else:
         assert false, 'invalid argument Q'
     print_result(result)
