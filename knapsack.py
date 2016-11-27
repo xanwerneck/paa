@@ -1,5 +1,6 @@
 # PAA 2016.2
 # Alexandre Werneck
+# Gabriel de Quadros Ligneul
 
 #### REFERENCES ####
 # Sort complexity: http://svn.python.org/projects/python/trunk/Objects/listsort.txt
@@ -104,7 +105,7 @@ class BitSet:
         self.data = [0 for _ in range(self.n_words)]
 
     def add(self, index): # O(1)
-        self.data[index / 32] |= 1 << index % 32
+        self.data[index // 32] |= 1 << index % 32
 
     def union_empty(self, other): # O(n)
         assert self.n_words == other.n_words, 'invalid bitset comparison'
