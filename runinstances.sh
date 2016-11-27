@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-rm -r instances_solutions
+rm -rf instances_solutions
 mkdir -p instances_solutions
 for input in instances/Data*; do
     basename=${input%.*}
