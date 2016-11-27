@@ -14,8 +14,11 @@ class Item(object):
         self.index = index
         self.value = value
         self.weight = weight
-        self.conflicts_list = conflicts
-        self.conflicts = None
+        self.conflicts = conflicts
+        if self.value == 0:
+            self.ratio = float('inf')
+        else:
+            self.ratio = float(self.weight) / float(self.value)
 
 class SelectedItem(object):
     def __init__(self, item, frac):
@@ -51,12 +54,7 @@ def print_result(result):
 
 # Question 1
 def fractional_knapsack(itens, W):
-    def comparison(x):
-        if x.value == 0:
-            return float('inf')
-        else:
-            return float(x.weight) / float(x.value)
-    itens.sort(key = comparison)
+    itens.sort(key = lambda i: i.ratio)
     sack_itens = []
     sack_weight = 0
     for i in itens:
@@ -115,30 +113,29 @@ class BitSet:
         return True
 
 def conflicts_knapsack(itens, W):
-    # O(n^2)
-    for i in itens:
-        i.conflicts = BitSet(len(itens))
-
+    # fix conflicts
     # O(n + m)
     for i in itens:
-        for c in i.conflicts_list:
-            i.conflicts.add(c)
-            itens[c].conflicts.add(i.index)
+        for c in i.conflicts:
+            if c > i.index:
+                itens[c].conflicts.append(i.index)
+
+    # O(n^2)
+    for i in itens:
+        i.conflicts_set = BitSet(len(itens))
+        for c in i.conflicts:
+            i.conflicts_set.add(c)
 
     # O(nlogn)
-    def comparison(x):
-        if x.value == 0:
-            return float('inf')
-        else:
-            return float(x.weight) / float(x.value)
-    itens.sort(key = comparison)
+    itens.sort(key = lambda i: i.ratio)
 
     # O(n^2)
     sack_set = BitSet(len(itens))
     sack_itens = []
     sack_weight = 0
     for i in itens:
-        if sack_weight + i.weight <= W and i.conflicts.union_empty(sack_set):
+        if (sack_weight + i.weight <= W and
+            i.conflicts_set.union_empty(sack_set)):
             sack_set.add(i.index)
             sack_itens.append(SelectedItem(i, 1))
             sack_weight += i.weight
