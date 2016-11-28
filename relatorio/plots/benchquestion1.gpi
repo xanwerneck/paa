@@ -1,0 +1,8 @@
+load 'plots/commonsettings.gp'
+load 'plots/palettes/spectral.pal'
+
+set output "plots/benchquestion1.eps"
+
+plot for[i=2:5] 'plots/benchquestion1.dat' \
+    using i:xtic(1) title column ls ((i - 1) * 2)
+
