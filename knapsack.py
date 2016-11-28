@@ -8,6 +8,24 @@
 from math import ceil
 import sys
 
+# Configuration for question 3
+# Prints the used heuristic
+PRINT_HEURISTIC = False
+
+# Used heuristics and its namaes
+HEURISTICS = [
+    lambda i: i.ratio,
+    lambda i: 1.0 / i.value if i.value > 0 else float('inf'),
+    lambda i: sum(itens[c].value for c in i.conflicts),
+    lambda i: 1 / sum(itens[c].ratio for c in i.conflicts),
+]
+HNAMES = [
+    'ratio',
+    '1 / value',
+    'sum of values',
+    '1 / sum of ratios',
+]
+
 # Itens
 class Item(object):
     def __init__(self, index, value, weight, conflicts):
@@ -112,34 +130,45 @@ class BitSet:
                 return False
         return True
 
-def conflicts_knapsack(itens, W):
-    # fix conflicts
-    # O(n + m)
-    for i in itens:
-        for c in i.conflicts:
-            if c > i.index:
-                itens[c].conflicts.append(i.index)
-
-    # O(n^2)
+def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
+    # Create bitset O(n * n + m) => O(n^2)
     for i in itens:
         i.conflicts_set = BitSet(len(itens))
         for c in i.conflicts:
             i.conflicts_set.add(c)
 
-    # O(nlogn)
-    itens.sort(key = lambda i: i.ratio)
+    # Compute heuristic O(nlogn + n + m) => O(nlogn + m)
+    itens.sort(key = lambda i: i.index)
+    for i in itens:
+        i.heuristic = compute_heuristic(i)
+    itens.sort(key = lambda i: i.heuristic)
 
     # O(n^2)
     sack_set = BitSet(len(itens))
-    sack_itens = []
-    sack_weight = 0
+    sack_itens, sack_weight, sack_value = [], 0, 0
     for i in itens:
         if (sack_weight + i.weight <= W and
             i.conflicts_set.union_empty(sack_set)):
             sack_set.add(i.index)
             sack_itens.append(SelectedItem(i, 1))
             sack_weight += i.weight
-    return sack_itens
+            sack_value += i.value
+    return sack_itens, sack_value
+
+def conflicts_knapsack(itens, W):
+    # fix conflicts O(n + m)
+    for i in itens:
+        for c in i.conflicts:
+            if c > i.index:
+                itens[c].conflicts.append(i.index)
+    best_sack, best_value, best_heuristic = None, 0, None
+    for heuristic, hname in zip(HEURISTICS, HNAMES):
+        sack, value = conflicts_knapsack_with_heuristic(itens, W, heuristic)
+        if value > best_value:
+            best_sack, best_value, best_heuristic = sack, value, hname
+    if PRINT_HEURISTIC:
+        print('Used heuristic: {}'.format(best_heuristic))
+    return best_sack
 
 # Main
 if __name__ == '__main__':
