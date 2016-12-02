@@ -10,10 +10,16 @@
 \usepackage{epstopdf}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 
 \setcounter{section}{-1}
 
 \DeclareGraphicsExtensions{.eps}
+
+\makeatletter
+\renewcommand{\ALG@name}{Algoritmo}
+\makeatother
 
 \title{Relatório -- Implementation Work}
 \author{Alexandre Werneck\\Gabriel de Quadros Ligneul}
@@ -23,10 +29,12 @@
 
 \maketitle
 
+%-------------------------------------------------------------------------------
 \section{Introdução}
 
 TODO.
 
+%-------------------------------------------------------------------------------
 \section{On the Fractional Knapsack Problem}
 
 \subsection{Pseudocódigo}
@@ -43,32 +51,91 @@ TODO.
 
 \subsection{Testes de Desempenho}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion1}
-  \caption{TODO.}
-  \label{fig:benchquestion1}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion2}
-  \caption{TODO.}
-  \label{fig:benchquestion2}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion3}
-  \caption{TODO.}
-  \label{fig:benchquestion3}
-\end{figure}
-
-
+%-------------------------------------------------------------------------------
 \section{Moving on Towards Integer Optimization}
 
+\subsection{Item 1}
+
+O algoritmo da questão anterior não retorna a solução ótima em todos os casos. Um contraexemplo é uma instância do problema com dois itens: o item 1 com peso 10kg e valor \$10 e o item 2 com peso 1kg e valor \$2. Numa mochila que aguenta 10kg, o algoritmo anterior escolheria primeiro o item 2, pois ele tem a maior razão entre valor e peso. Não seria possível inserir o item 1 no conjunto final da solução, pois ultrapassaria o limite da mochila, e consequentemente o lucro seria \$2. Entretanto, a solução ótima para essa instância do problema contém apenas o item 1, possibilitando \$10 de lucro.
+
+\subsection{Item 2}
+
+\iffalse
+If the greedy algorithm does not guarantee optimality, provide an alternative optimal
+algorithm and analyze its computational complexity.
+\fi
+
+Propomos o algoritmo \ref{alg:q2} como solução ótima para este problema. Neste algoritmo 
+
+\begin{algorithm}
+\begin{algorithmic}
+\STATE \COMMENT {Input:}
+\STATE $i \gets 10$
+
+\end{algorithmic}
+
+\iffalse
+function integer_knapsack(itens, n, W)
+  # Initialize the data structures
+  SV = ZeroedMatrix(n + 1, W + 1)
+  SI = ZeroedMatrix(n + 1, W + 1)
+
+  # Compute the optimum value for each cell
+  for i in 
+
+
+
+  for i in range(1, n + 1): # O(nW)
+    for w in range(W + 1):
+      item_w = itens[i - 1].weight
+      item_v = itens[i - 1].value
+      sack_with_last_item = sack_value[i - 1][w]
+      if item_w > w:
+        sack_value[i][w] = sack_with_last_item
+      else:
+        sack_with_this_item = sack_value[i - 1][w - item_w] + item_v
+        if sack_with_this_item > sack_with_last_item:
+          sack_value[i][w] = sack_with_this_item
+          sack_itens[i][w] = True
+        else:
+          sack_value[i][w] = sack_with_last_item
+  selected_itens = []
+  curr_w = W
+  for i in reversed(range(1, n + 1)): # O(n)
+    item = itens[i - 1]
+    if sack_itens[i][curr_w]:
+      curr_w -= item.weight
+      selected_itens.append(SelectedItem(item, 1))
+  return selected_itens
+\fi
+
+\caption{Resolução do problema da mochila inteiro.}
+\label{alg:q2}
+\end{algorithm}
+
+%-------------------------------------------------------------------------------
 \section{Adding Some Spice to the Problem}
 
+\iffalse
+Implement the proposed algorithm, and verify if its theoretical complexity is attained, in
+practice, on the benchmark instances provided with the project.
+\fi
+
+A tabela \ref{tab:benchq2} apresenta o tempo de execução do programa implementado para os diferentes parâmetros de entrada.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.134 & 0.248 & 0.592 & 1.207 \\
+250 & 0.253 & 0.488 & 1.191 & 2.447 \\
+500 & 0.528 & 1.022 & 2.524 & 5.034 \\
+1000 & 1.136 & 2.141 & 5.217 & 10.396 \\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) do programa implementado para questão 2 para os benchmarks disponibilizados.}
+\label{tab:benchq2}
+\end{table}
 
 \end{document}
 
