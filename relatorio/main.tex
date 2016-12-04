@@ -1,4 +1,4 @@
-\documentclass[a4paper, 11pt]{article}
+\documentclass[a4paper]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
@@ -21,7 +21,14 @@
 \renewcommand{\ALG@name}{Algoritmo}
 \makeatother
 
-\title{Relatório -- Implementation Work}
+\algtext*{EndFor}
+\algtext*{EndIf}
+\algtext*{EndWhile}
+\algtext*{EndFunction}
+\algrenewcommand{\algorithmiccomment}[1]{// #1}
+\newcommand{\algsection}[2]{(linha \ref{alg:#1:#2:start} à \ref{alg:#1:#2:end})}
+
+\title{Projeto e Análise de Algoritmos\\Relatório -- Trabalho de Implementação}
 \author{Alexandre Werneck\\Gabriel de Quadros Ligneul}
 \date{12 de Dezembro de 2016}
 
@@ -34,8 +41,10 @@
 
 TODO.
 
+Comentar notação, estrutura itens, indexação de 1 a n
+
 %-------------------------------------------------------------------------------
-\section{On the Fractional Knapsack Problem}
+\section{Problema da Mochila com Frações}
 
 \subsection{Pseudocódigo}
 
@@ -51,111 +60,123 @@ TODO.
 
 \subsection{Testes de Desempenho}
 
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.022 & 0.022 & 0.021 & 0.021 \\
+250 & 0.025 & 0.026 & 0.026 & 0.027 \\
+500 & 0.042 & 0.041 & 0.042 & 0.041 \\
+1000 & 0.104 & 0.102 & 0.104 & 0.104 \\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 1 para as instâncias disponibilizados.}
+\label{tab:q1:bench}
+\end{table}
+
 %-------------------------------------------------------------------------------
-\section{Moving on Towards Integer Optimization}
+\section{Problema da Mochila com Inteiros}
 
-\subsection{Item 1}
+\subsection{Contraexemplo para o Algoritmo Guloso}
 
-O algoritmo da questão anterior não retorna a solução ótima em todos os casos. Um contraexemplo é uma instância do problema com dois itens: o item 1 com peso 10kg e valor \$10 e o item 2 com peso 1kg e valor \$2. Numa mochila que aguenta 10kg, o algoritmo anterior escolheria primeiro o item 2, pois ele tem a maior razão entre valor e peso. Não seria possível inserir o item 1 no conjunto final da solução, pois ultrapassaria o limite da mochila, e consequentemente o lucro seria \$2. Entretanto, a solução ótima para essa instância do problema contém apenas o item 1, possibilitando \$10 de lucro.
+O algoritmo da questão anterior não retorna a solução ótima em todos os casos para esta versão do problema. Um contraexemplo é uma instância com dois itens: o item 1 com peso 10kg e valor \$10 e o item 2 com peso 1kg e valor \$2. Numa mochila que aguenta 10kg, o algoritmo anterior escolheria primeiro o item 2, pois ele tem a maior razão entre valor e peso. Não seria possível inserir o item 1 no conjunto final da solução, pois ultrapassaria o limite da mochila, e consequentemente o lucro seria \$2. Entretanto, a solução ótima para essa instância do problema contém apenas o item 1, possibilitando \$10 de lucro.
 
-\subsection{Item 2}
+\subsection{Algoritmo Ótimo}
 
-\iffalse
-If the greedy algorithm does not guarantee optimality, provide an alternative optimal
-algorithm and analyze its computational complexity.
-\fi
+Propomos o algoritmo \ref{alg:q2}, que utiliza programação dinâmica, para obter a solução ótima para este problema.
 
-Propomos o algoritmo \ref{alg:q2} como solução ótima para este problema. Neste algoritmo 
-
-\begin{algorithm}
-\begin{algorithmic}
-  \algrenewcommand{\algorithmiccomment}[1]{\hskip3em\# #1}
-  \Function{Knapsack}{$itens, n, W$} \Comment{Itens are indexed from 1 to n}
-    \State \# Initialization:
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+  \Function{knapsack}{$itens, n, W$}
+    \State \Comment{Initialization:} \label{alg:q2:init:start}
     \State $M \gets ZeroedMatrix(n, W)$ \Comment{Optimum profit}
-    \State $S \gets ZeroedMatrix(n, W)$ \Comment{Selected itens}
-    \State \# Find the best solution for each subproblem:
+    \State $S \gets ZeroedMatrix(n, W)$ \Comment{Selected itens} \label{alg:q2:init:end}
+    \State \Comment{Find the best solution for each subproblem:} \label{alg:q2:calcopt:start}
     \For{$i \gets 1, n$}
       \For{$w \gets 1, W$}
-        \State $li = M[i - 1, w]$ \Comment{Best solution for last item}
+        \State $li \gets M[i - 1, w]$ \Comment{Best solution for last item}
         \If{$itens[i].w > w$}
-          \State $M[i, w] = li$
+          \State $M[i, w] \gets li$
         \Else
-          \State $ti = itens[i].v + M[i- 1, w - itens[i].w]$
+          \State \Comment{$ti$ is the best solution with this item:}
+          \State $ti \gets itens[i].v + M[i- 1, w - itens[i].w]$
           \If{ti > li}
-            \State $M[i, w] = ti$
-            \State $S[i, w] = 1$ \Comment{Use this item}
+            \State $M[i, w] \gets ti$
+            \State $S[i, w] \gets 1$ \Comment{Use this item in the solution}
           \Else
-            \State $M[i, w] = li$
+            \State $M[i, w] \gets li$
           \EndIf
         \EndIf
       \EndFor
-    \EndFor
-    \State \# Build the list of selected itens:
+    \EndFor \label{alg:q2:calcopt:end}
+    \State \Comment{Build the list of selected itens:} \label{alg:q2:select:start}
     \State $selected \gets EmptyList()$
-    \State $w = M[n, W]$
+    \State $w \gets M[n, W]$
     \For{$i \gets n, 1$}
       \If{$S[i, w] == 1$}
         \State $selected.append(i)$
-        \State $w = w - itens[i].w$
+        \State $w \gets w - itens[i].w$
       \EndIf
     \EndFor
+    \State \Return selected \label{alg:q2:select:end}
   \EndFunction
 \end{algorithmic}
-
-\iffalse
- \And ti > li$}
-function integer_knapsack(itens, n, W)
-  for i in range(1, n + 1): # O(nW)
-    for w in range(W + 1):
-      item_w = itens[i - 1].weight
-      item_v = itens[i - 1].value
-      sack_with_last_item = sack_value[i - 1][w]
-      if item_w > w:
-        sack_value[i][w] = sack_with_last_item
-      else:
-        sack_with_this_item = sack_value[i - 1][w - item_w] + item_v
-        if sack_with_this_item > sack_with_last_item:
-          sack_value[i][w] = sack_with_this_item
-          sack_itens[i][w] = True
-        else:
-          sack_value[i][w] = sack_with_last_item
-  selected_itens = []
-  curr_w = W
-  for i in reversed(range(1, n + 1)): # O(n)
-    item = itens[i - 1]
-    if sack_itens[i][curr_w]:
-      curr_w -= item.weight
-      selected_itens.append(SelectedItem(item, 1))
-  return selected_itens
-\fi
-
-\caption{Resolução do problema da mochila inteiro.}
+\caption{Resolução do problema da mochila com valores inteiros.}
 \label{alg:q2}
 \end{algorithm}
 
-%-------------------------------------------------------------------------------
-\section{Adding Some Spice to the Problem}
+\subsubsection{Avaliação da Complexidade}
 
-\iffalse
-Implement the proposed algorithm, and verify if its theoretical complexity is attained, in
-practice, on the benchmark instances provided with the project.
-\fi
+O primeiro trexo do algoritmo \algsection{q2}{init} cria duas matrizes de tamanho $n \times W$, percorre todas as suas posições e as inicializa com 0. Entretanto, como o tamanho da matrix varia de acordo com o \emph{valor} de $W$, não podemos avaliar a complexidade como $\theta(nW)$. Definimos K como o tamanho (número de bits) de $W$ e sabemos que $W \approx 2^K$. Logo, levando em conta o \emph{tamanho} de $W$, a complexidade desse trecho é de $\theta(n2^K)$. O segundo trecho \algsection{q2}{calcopt} realiza uma sério de operações em tempo constante para cada posição da matrix $M$, logo a complexidade desse último também é $\theta(n2^K)$. Por fim, o terceiro trecho \algsection{q2}{select} percorre a lista de itens e insere (operação constante) os selecionadas na lista de saída. No pior caso, todos os itens são seleciodados e toda a lista de entrada é percorrida, logo avaliamos a complexidade como $\theta(n)$. A complexidade da função é a soma da complexidade dos três trechos: $T(n, K) \in \theta(n2^K + n2^K + n) \in \theta(n2^K)$.
 
-A tabela \ref{tab:benchq2} apresenta o tempo de execução do programa implementado para os diferentes parâmetros de entrada.
+\subsection{Avaliação do Desempenho}
+
+A tabela \ref{tab:q2:bench} apresenta o tempo de execução do programa implementado para as instâncias do problema.
+Com base no gráfico da figura \ref{fig:q2:itens}, podemos confirmar que o tempo de execução cresce linearmente em relação ao número e itens. Com base no gráfico da figura \ref{fig:q2:weight}, observamos que o tempo de execução cresce linearmente em relação ao peso aceito pela mochila. Consequentemente, o tempo de execução cresce exponencialmente em relação ao tamanho (número de bits) desse peso.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{c|c|c|c|c}
 Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
 \hline
-120 & 0.134 & 0.248 & 0.592 & 1.207 \\
-250 & 0.253 & 0.488 & 1.191 & 2.447 \\
-500 & 0.528 & 1.022 & 2.524 & 5.034 \\
-1000 & 1.136 & 2.141 & 5.217 & 10.396 \\
+120 & 0.072 & 0.126 & 0.306 & 0.599 \\
+250 & 0.128 & 0.243 & 0.593 & 1.208 \\
+500 & 0.259 & 0.498 & 1.218 & 2.436 \\
+1000 & 0.555 & 1.038 & 2.515 & 5.054 \\
 \end{tabular}
-\caption{Medida do tempo de execução (em segundos) do programa implementado para questão 2 para os benchmarks disponibilizados.}
-\label{tab:benchq2}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 2 para as instâncias disponibilizados.}
+\label{tab:q2:bench}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{plots/q2itens}
+\caption{Variação do tempo de execução de acordo com o número de itens.}
+\label{fig:q2:itens}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{plots/q2weight}
+\caption{Variação do tempo de execução de acordo com o peso da mochila.}
+\label{fig:q2:weight}
+\end{figure}
+
+%-------------------------------------------------------------------------------
+\section{Problema da Mochila com Conflitos}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.036	 & 0.036	 & 0.037	 & 0.036	 \\
+250 & 0.083	 & 0.086	 & 0.084	 & 0.083	 \\
+500 & 0.268	 & 0.271	 & 0.27	 & 0.27	 \\
+1000 & 1.085	 & 1.113	 & 1.1	 & 1.092	 \\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 3 para as instâncias disponibilizados.}
+\label{tab:q3:bench}
 \end{table}
 
 \end{document}
