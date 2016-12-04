@@ -115,44 +115,23 @@ def integer_knapsack(itens, W):
     return selected_itens
 
 # Question 3
-class BitSet:
-    def __init__(self, size): # O(n)
-        self.n_words = int(ceil(size / 32.0))
-        self.data = [0 for _ in range(self.n_words)]
-
-    def add(self, index): # O(1)
-        self.data[index // 32] |= 1 << index % 32
-
-    def union_empty(self, other): # O(n)
-        assert self.n_words == other.n_words, 'invalid bitset comparison'
-        for i in range(self.n_words):
-            if self.data[i] & other.data[i] != 0:
-                return False
-        return True
-
 def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
-    # Create bitset O(n * n + m) => O(n^2)
-    for i in itens:
-        i.conflicts_set = BitSet(len(itens))
-        for c in i.conflicts:
-            i.conflicts_set.add(c)
-
     # Compute heuristic O(nlogn + n + m) => O(nlogn + m)
-    itens.sort(key = lambda i: i.index)
-    for i in itens:
+    itensh = itens[:]
+    for i in itensh:
         i.heuristic = compute_heuristic(i)
-    itens.sort(key = lambda i: i.heuristic)
+    itensh.sort(key = lambda i: i.heuristic)
 
-    # O(n^2)
-    sack_set = BitSet(len(itens))
+    # O(n + m)
+    nonconflicts = set(itens)
     sack_itens, sack_weight, sack_value = [], 0, 0
-    for i in itens:
-        if (sack_weight + i.weight <= W and
-            i.conflicts_set.union_empty(sack_set)):
-            sack_set.add(i.index)
+    for i in itensh:
+        if i in nonconflicts and sack_weight + i.weight <= W:
             sack_itens.append(SelectedItem(i, 1))
             sack_weight += i.weight
             sack_value += i.value
+            for c in i.conflicts:
+                nonconflicts.discard(itens[c])
     return sack_itens, sack_value
 
 def conflicts_knapsack(itens, W):
