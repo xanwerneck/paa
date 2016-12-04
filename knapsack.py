@@ -123,15 +123,15 @@ def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
     itensh.sort(key = lambda i: i.heuristic)
 
     # O(n + m)
-    nonconflicts = set(itens)
+    hasconflict = [False for i in itens]
     sack_itens, sack_weight, sack_value = [], 0, 0
     for i in itensh:
-        if i in nonconflicts and sack_weight + i.weight <= W:
+        if not hasconflict[i.index] and sack_weight + i.weight <= W:
             sack_itens.append(SelectedItem(i, 1))
             sack_weight += i.weight
             sack_value += i.value
             for c in i.conflicts:
-                nonconflicts.discard(itens[c])
+                hasconflict[c] = True
     return sack_itens, sack_value
 
 def conflicts_knapsack(itens, W):
