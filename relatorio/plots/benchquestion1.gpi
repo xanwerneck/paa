@@ -3,6 +3,17 @@ load 'plots/palettes/spectral.pal'
 
 set output "plots/benchquestion1.eps"
 
+set style data histogram
+set style histogram cluster gap 1
+set style fill solid border -1
+set xtic font "Helvetica,14"
+#set boxwidth 0.9
+set logscale y 10
+
+set xlabel "Número de itens"
+set ylabel "Tempo de execução (segundos)"
+set key left
+
 plot for[i=2:5] 'plots/benchquestion1.dat' \
     using i:xtic(1) title column ls ((i - 1) * 2)
 

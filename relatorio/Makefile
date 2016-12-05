@@ -3,7 +3,7 @@
 plots=$(patsubst plots/%.gpi,images/%.eps,$(wildcard plots/*.gpi))
 
 # Creates pdf output file
-all: $(plots) # refs
+all: $(plots) refs
 	pdflatex --shell-escape main.tex
 
 # Create .dvi file
@@ -13,8 +13,9 @@ dvi: refs
 # Creates all the cross references
 refs: $(plots)
 	latex main
-	bibtex main
-	latex main
+	# Uncomment to enable bibtex:
+	#bibtex main
+	#latex main
 
 # gnuplot automatic rules
 images/%.eps: plots/%.gpi plots/%.dat

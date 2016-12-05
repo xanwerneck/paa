@@ -1,4 +1,4 @@
-\documentclass[a4paper, 11pt]{article}
+\documentclass[a4paper]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
@@ -10,12 +10,25 @@
 \usepackage{epstopdf}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \setcounter{section}{-1}
 
 \DeclareGraphicsExtensions{.eps}
 
-\title{Relatório -- Implementation Work}
+\makeatletter
+\renewcommand{\ALG@name}{Algoritmo}
+\makeatother
+
+\algtext*{EndFor}
+\algtext*{EndIf}
+\algtext*{EndWhile}
+\algtext*{EndFunction}
+\algrenewcommand{\algorithmiccomment}[1]{// #1}
+\newcommand{\algsection}[2]{(linha \ref{alg:#1:#2:start} à \ref{alg:#1:#2:end})}
+
+\title{Projeto e Análise de Algoritmos\\Relatório -- Trabalho de Implementação}
 \author{Alexandre Werneck\\Gabriel de Quadros Ligneul}
 \date{12 de Dezembro de 2016}
 
@@ -23,11 +36,15 @@
 
 \maketitle
 
+%-------------------------------------------------------------------------------
 \section{Introdução}
 
 TODO.
 
-\section{On the Fractional Knapsack Problem}
+Comentar notação, estrutura itens, indexação de 1 a n
+
+%-------------------------------------------------------------------------------
+\section{Problema da Mochila com Frações}
 
 \subsection{Pseudocódigo}
 
@@ -43,32 +60,183 @@ TODO.
 
 \subsection{Testes de Desempenho}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion1}
-  \caption{TODO.}
-  \label{fig:benchquestion1}
-\end{figure}
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.022 & 0.022 & 0.021 & 0.021 \\
+250 & 0.025 & 0.026 & 0.026 & 0.027 \\
+500 & 0.042 & 0.041 & 0.042 & 0.041 \\
+1000 & 0.104 & 0.102 & 0.104 & 0.104 \\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 1 para as instâncias disponibilizados.}
+\label{tab:q1:bench}
+\end{table}
+
+%-------------------------------------------------------------------------------
+\section{Problema da Mochila com Inteiros}
+
+\subsection{Contraexemplo para o Algoritmo Guloso}
+
+O algoritmo da questão anterior não retorna a solução ótima em todos os casos para esta versão do problema. Um contraexemplo é uma instância com dois itens: o item 1 com peso 10kg e valor \$10 e o item 2 com peso 1kg e valor \$2. Numa mochila que aguenta 10kg, o algoritmo anterior escolheria primeiro o item 2, pois ele tem a maior razão entre valor e peso. Não seria possível inserir o item 1 no conjunto final da solução, pois ultrapassaria o limite da mochila, e consequentemente o lucro seria \$2. Entretanto, a solução ótima para essa instância do problema contém apenas o item 1, possibilitando \$10 de lucro.
+
+\subsection{Algoritmo Ótimo}
+
+Propomos o algoritmo \ref{alg:q2}, que utiliza programação dinâmica, para obter a solução ótima para este problema.
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+  \Function{IntegerKnapsack}{$itens, n, W$}
+    \State \Comment{Initialization:} \label{alg:q2:init:start}
+    \State $M \gets ZeroedMatrix(n, W)$ \Comment{Optimum profit}
+    \State $S \gets ZeroedMatrix(n, W)$ \Comment{Selected itens} \label{alg:q2:init:end}
+    \State \Comment{Find the best solution for each subproblem:} \label{alg:q2:calcopt:start}
+    \For{$i \gets 1, n$}
+      \For{$w \gets 1, W$}
+        \State $li \gets M[i - 1, w]$ \Comment{Best solution for last item}
+        \If{$itens[i].w > w$}
+          \State $M[i, w] \gets li$
+        \Else
+          \State \Comment{$ti$ is the best solution with this item:}
+          \State $ti \gets itens[i].v + M[i- 1, w - itens[i].w]$
+          \If{ti > li}
+            \State $M[i, w] \gets ti$
+            \State $S[i, w] \gets 1$ \Comment{Use this item in the solution}
+          \Else
+            \State $M[i, w] \gets li$
+          \EndIf
+        \EndIf
+      \EndFor
+    \EndFor \label{alg:q2:calcopt:end}
+    \State \Comment{Build the list of selected itens:} \label{alg:q2:select:start}
+    \State $selected \gets EmptyList()$
+    \State $w \gets M[n, W]$
+    \For{$i \gets n, 1$}
+      \If{$S[i, w] == 1$}
+        \State $selected.append(i)$
+        \State $w \gets w - itens[i].w$
+      \EndIf
+    \EndFor
+    \State \Return selected \label{alg:q2:select:end}
+  \EndFunction
+\end{algorithmic}
+\caption{Resolução do problema da mochila com valores inteiros.}
+\label{alg:q2}
+\end{algorithm}
+
+\subsubsection{Avaliação da Complexidade}
+
+O primeiro trexo do algoritmo \algsection{q2}{init} cria duas matrizes de tamanho $n \times W$, percorre todas as suas posições e as inicializa com 0. Entretanto, como o tamanho da matrix varia de acordo com o \emph{valor} de $W$, não podemos avaliar a complexidade como $\theta(nW)$. Definimos K como o tamanho (número de bits) de $W$ e sabemos que $W \approx 2^K$. Logo, levando em conta o \emph{tamanho} de $W$, a complexidade desse trecho é de $\theta(n2^K)$. O segundo trecho \algsection{q2}{calcopt} realiza uma sério de operações em tempo constante para cada posição da matrix $M$, logo a complexidade desse último também é $\theta(n2^K)$. Por fim, o terceiro trecho \algsection{q2}{select} percorre a lista de itens e insere (operação constante) os selecionadas na lista de saída. No pior caso, todos os itens são seleciodados e toda a lista de entrada é percorrida, logo avaliamos a complexidade como $\theta(n)$. A complexidade da função é a soma da complexidade dos três trechos: $T(n, K) \in \theta(n2^K + n2^K + n) \in \theta(n2^K)$.
+
+\subsection{Avaliação do Desempenho}
+
+A tabela \ref{tab:q2:bench} apresenta o tempo de execução do programa implementado para as instâncias providas.
+Com base no gráfico da esqueda na figura \ref{fig:q2:itens}, podemos confirmar que o tempo de execução cresce linearmente em relação ao número de itens. Com base no gráfico da direita, observamos que o tempo de execução cresce linearmente em relação ao peso aceito pela mochila. Consequentemente, o tempo de execução cresce exponencialmente em relação ao tamanho (número de bits) desse peso.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.072 & 0.126 & 0.306 & 0.599 \\
+250 & 0.128 & 0.243 & 0.593 & 1.208 \\
+500 & 0.259 & 0.498 & 1.218 & 2.436 \\
+1000 & 0.555 & 1.038 & 2.515 & 5.054 \\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 2 para as instâncias disponibilizados.}
+\label{tab:q2:bench}
+\end{table}
 
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion2}
-  \caption{TODO.}
-  \label{fig:benchquestion2}
+\centering
+\includegraphics[width=0.49\linewidth]{plots/q2itens}
+\includegraphics[width=0.49\linewidth]{plots/q2weight}
+\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
+\label{fig:q2:itens}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{plots/benchquestion3}
-  \caption{TODO.}
-  \label{fig:benchquestion3}
-\end{figure}
+%-------------------------------------------------------------------------------
+\section{Problema da Mochila com Conflitos}
 
+\subsection{Algoritmo Proposto}
 
-\section{Moving on Towards Integer Optimization}
+Para esta versão do problema da mochila propomos quatro diferentes heurísticas, apresentadas na tabela \ref{tab:q3:heuristics}. O algoritmo \ref{alg:q3} gera um conjunto de itens para cada heurística e escolhe o de maior lucro.
 
-\section{Adding Some Spice to the Problem}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{2.5}
+\begin{tabular}{c|c}
+Heurística & Fórmula \\\hline
+H1 & $\dfrac{peso}{valor}$ \\
+H2 & $\dfrac{1}{valor}$ \\
+H3 & $\sum^{conflitos}_{c} c.valor$ \\
+H4 & $\dfrac{1}{\sum^{conflitos}_{c}\dfrac{c.peso}{c.valor}}$ \\
+\end{tabular}
+\caption{Heurísticas utilizadas para resolver o problema da mochila com conflitos.}
+\label{tab:q3:heuristics}
+\end{table}
 
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+  \State \Comment{Obtains the group of itens using the heuristic H:}
+  \Function{ConflictsKnapsackHelper}{$itens, n, W, H$}
+    \For{$i \gets 1, n$}
+      \State {$itens[i].heuristic \gets H(itens[i])$}
+    \EndFor
+    \State {Order $itens$ using the $heuristic$ field}
+    \State $hasconflict \gets EmptyList()$
+    \For{$i \gets 1, n$}
+      \State $hasconflict[i] \gets False$
+    \EndFor
+    \State $selected \gets EmptyList()$
+    \State $w \gets 0$
+    \For{$i \gets 1, n$}
+      \If{$!hasconflict[itens[i].index] \textrm{ \textbf{and} } itens[i].weight + w \le W$}
+        \State $selected.append(i)$
+        \For{$c \textrm{ \textbf{in} } itens[i].conflicts$}
+          \State $hasconflict[c.index] \gets True$
+        \EndFor
+      \EndIf
+    \EndFor
+    \State \Return selected \label{alg:q2:select:end}
+  \EndFunction
+  \State \Comment{Return the most valuable set of itens given the heuristics:}
+  \Function{ConflictsKnapsack}{$itens, n, W$}
+    \State $bestsack \gets Nil$
+    \State $bestvalue \gets 0$
+    \For{$H \textrm{ \textbf{in} } heuristics$}
+      \State $sack \gets ConflictsKnapsackHelper(itens, n, W, H)$
+      \State $value \gets ComputeSackValue(sack)$
+      \If{$value \ge bestvalue$}
+        \State $bestsack \gets sack$
+        \State $bestvalue \gets value$
+      \EndIf
+    \EndFor
+    \State \Return $bestsack$
+  \EndFunction
+\end{algorithmic}
+\caption{Resolução do problema da mochila com conflitos.}
+\label{alg:q3}
+\end{algorithm}
+
+\subsection{Avaliação da Complexidade}
+
+\subsection{Avaliação do Desempenho}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\hline
+120 & 0.023	& 0.023	& 0.023	& 0.023	\\
+250 & 0.035	& 0.036	& 0.035	& 0.036	\\
+500 & 0.084	& 0.086	& 0.084	& 0.085	\\
+1000 & 0.344	& 0.347	& 0.343	& 0.345	\\
+\end{tabular}
+\caption{Medida do tempo de execução (em segundos) implementação da questão 3 para as instâncias disponibilizados.}
+\label{tab:q3:bench}
+\end{table}
 
 \end{document}
 

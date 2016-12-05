@@ -1,7 +1,7 @@
 #!/bin/env lua
 
 -- Configuration:
-local n_runs = 3
+local n_runs = 10
 local supress_errors = false
 local n_questions = 3
 local instances = {

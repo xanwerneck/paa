@@ -1,0 +1,13 @@
+load 'plots/commonsettings.gp'
+load 'plots/palettes/inferno.pal'
+
+basename = 'plots/q2weight'
+set output basename.'.eps'
+
+titles = 'n=120 n=250 n=500 n=1000'
+set xlabel 'Peso aceito pela mochila'
+set ylabel 'Tempo de execução (segundos)'
+set key left
+
+plot for [i=2:5] basename.'.dat' using 1:i title word(titles, i - 1) \
+        with linespoints ls (9 - (i - 1) * 2) linewidth 3
