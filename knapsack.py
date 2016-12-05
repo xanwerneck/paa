@@ -126,8 +126,6 @@ def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
     hasconflict = [False for i in itens]
     sack_itens, sack_weight, sack_value = [], 0, 0
     for i in itensh:
-        if (sack_weight + i.weight > W):
-            break
         if not hasconflict[i.index] and sack_weight + i.weight <= W:
             sack_itens.append(SelectedItem(i, 1))
             sack_weight += i.weight
