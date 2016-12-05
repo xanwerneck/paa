@@ -88,7 +88,7 @@ def fractional_knapsack(itens, W):
 
 # Question 2
 def integer_knapsack(itens, W):
-    n = len(itens)
+    n = len(itens) # O(1)
     sack_value = [[0 for y in range(W + 1)] for x in range(n + 1)]
     sack_itens = [[False for y in range(W + 1)] for x in range(n + 1)]
     for i in range(1, n + 1): # O(nW)
@@ -147,6 +147,8 @@ def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
     sack_set = BitSet(len(itens))
     sack_itens, sack_weight, sack_value = [], 0, 0
     for i in itens:
+        if (sack_weight + i.weight > W):
+            break
         if (sack_weight + i.weight <= W and
             i.conflicts_set.union_empty(sack_set)):
             sack_set.add(i.index)
