@@ -258,17 +258,32 @@ A função \emph{ConflictsKnapsack} apenas chama a função \emph{ConflictsKnaps
 
 \begin{table}[H]
 \centering
-\begin{tabular}{c|c|c|c|c}
-Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+\begin{tabular}{c|c|c|c|c|c}
+Itens & Conflitos & W=1000 & W=2000 & W=5000 & W=10000 \\
 \hline
-120 & 0.023	& 0.023	& 0.022	& 0.023	\\
-250 & 0.034	& 0.034	& 0.034	& 0.034	\\
-500 & 0.079	& 0.079	& 0.079	& 0.079	\\
-1000 & 0.324	& 0.321	& 0.325	& 0.325	\\
+120 & 3570 & 0.023	& 0.023	& 0.022	& 0.023	\\
+250 & 15562 & 0.034	& 0.034	& 0.034	& 0.034	\\
+500 & 62375 & 0.079	& 0.079	& 0.079	& 0.079	\\
+1000 & 249750 & 0.324	& 0.321	& 0.325	& 0.325	\\
 \end{tabular}
 \caption{Medida do tempo de execução (em segundos) implementação da questão 3 para as instâncias disponibilizados.}
 \label{tab:q3:bench}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{plots/q1itens}
+\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
+\label{fig:q1:itens}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{plots/q3itens}
+\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
+\label{fig:q3:itens}
+\end{figure}
+
 
 \end{document}
 

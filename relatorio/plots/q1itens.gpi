@@ -1,0 +1,13 @@
+load 'plots/commonsettings.gp'
+load 'plots/palettes/inferno.pal'
+
+basename = 'plots/q1itens'
+set output basename.'.eps'
+
+titles = 'W=1000 W=2000 W=5000 W=10000'
+set xlabel 'Número de Itens'
+set ylabel 'Tempo de execução (segundos)'
+set key left
+
+plot for [i=5:5] basename.'.dat' using 1:i title word(titles, i - 1) \
+        with linespoints ls (9 - (i - 1) * 2) linewidth 3
