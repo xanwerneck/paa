@@ -14,10 +14,10 @@ PRINT_HEURISTIC = False
 
 # Used heuristics and its namaes
 HEURISTICS = [
-    lambda i: i.ratio,
-    lambda i: 1.0 / i.value if i.value > 0 else float('inf'),
-    lambda i: sum(itens[c].value for c in i.conflicts),
-    lambda i: 1 / sum(itens[c].ratio for c in i.conflicts),
+    lambda i, itens: i.ratio,
+    lambda i, itens: 1.0 / i.value if i.value > 0 else float('inf'),
+    lambda i, itens: sum(itens[c].value for c in i.conflicts),
+    lambda i, itens: 1 / sum(itens[c].ratio for c in i.conflicts),
 ]
 HNAMES = [
     'ratio',
@@ -44,7 +44,7 @@ class SelectedItem(object):
         self.frac = frac
 
 # IO
-def load_itens(input):
+def load_itens(input, readconflicts):
     lines = input.splitlines()
     assert len(lines) > 2, 'empty input' 
     header = lines[0].split()
@@ -56,7 +56,10 @@ def load_itens(input):
         assert int(row[0]) == i + 1, 'invalid index {}'.format(id)
         value = int(row[1])
         weight = int(row[2])
-        conflicts = [int(c) - 1 for c in row[3:]]
+        if readconflicts:
+            conflicts = [int(c) - 1 for c in row[3:]]
+        else:
+            conflicts = []
         itens.append(Item(i, value, weight, conflicts))
     return itens, W
 
@@ -115,11 +118,11 @@ def integer_knapsack(itens, W):
     return selected_itens
 
 # Question 3
-def conflicts_knapsack_with_heuristic(itens, W, compute_heuristic):
+def conflicts_knapsack_with_heuristic(itens, W, H):
     # Compute heuristic O(nlogn + n + m) => O(nlogn + m)
     itensh = itens[:]
     for i in itensh:
-        i.heuristic = compute_heuristic(i)
+        i.heuristic = H(i, itens)
     itensh.sort(key = lambda i: i.heuristic)
 
     # O(n + m)
@@ -154,13 +157,12 @@ if __name__ == '__main__':
     assert len(sys.argv) == 3, 'invalid number of arguments'
     with open(sys.argv[1], 'r') as f:
         input = f.read()
-    itens, W = load_itens(input)
     if sys.argv[2] == '1':
-        result = fractional_knapsack(itens, W)
+        result = fractional_knapsack(*load_itens(input, False))
     elif sys.argv[2] == '2':
-        result = integer_knapsack(itens, W)
+        result = integer_knapsack(*load_itens(input, False))
     elif sys.argv[2] == '3':
-        result = conflicts_knapsack(itens, W)
+        result = conflicts_knapsack(*load_itens(input, True))
     else:
         assert false, 'invalid argument Q'
     print_result(result)
