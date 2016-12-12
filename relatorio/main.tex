@@ -1,4 +1,4 @@
-\documentclass[a4paper]{article}
+\documentclass[a4paper, 11pt]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
@@ -12,12 +12,17 @@
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage[a4paper,left=3cm,right=3cm,top=2.5cm, bottom=2.5cm]{geometry}
+\usepackage{amsthm}
+
+\newtheorem{lemma}{Lema}
 
 \setcounter{section}{-1}
 
 \DeclareGraphicsExtensions{.eps}
 
 \makeatletter
+\renewcommand{\ALG@beginalgorithmic}{\scriptsize}
 \renewcommand{\ALG@name}{Algoritmo}
 \makeatother
 
@@ -39,27 +44,33 @@
 %-------------------------------------------------------------------------------
 \section{Introdução}
 
-Esta seção apresenta as conveções e estruturas de dados utilizadas nos pseudocódigos deste trabalho. Descrevemos também a metodologia utilizada nos testes de desempenho.
+A implementação dos algoritmos propostos neste trabalho foram feitos na linguagem Python.
+Para executar o programa implementado, basta rodar a linha de comando \texttt{python3 knapsack.py <arquivo de entrada> <questão>}, onde a questão pode ser 1, 2 ou 3.
 
-Para representar os itens que fazem parte da entrada do problema, utilizamos uma estrutura de dados com peso, valor e lista de conflitos. A escrita e o acesso a cada campo dessa estrutura é feita em tempo constante. As estruturas de listas apresentadas nos algoritmos são implementadas como \emph{arrays} e possuem tempo de acesso constante.
+Utilizamos uma estrutura de dados com peso, valor e lista de conflitos para representar cada item que faz parte da entrada.
+No nosso programa em Python, utilizamos classes para representar tal estrutura.
+A escrita e o acesso a cada campo da classe é feita em tempo constante.
+As listas utilizadas nos algoritmos são implementadas como \emph{arrays} e possuem tempo de acesso constante com base nos índices.
 
-Todos os testes de desempenho foram feitos no mesmo computador, que possui um processador Intel Core i7-4770 e sistema operacional Linux. Medimos o tempo real (\emph{wall-clock time}) usando o programa \texttt{time}. Para cada instancia do problema, foram realizados 10 medições e apenas o menor tempo foi considerado.
+Todos os testes de desempenho foram feitos no mesmo computador, que possui um processador Intel Core i7-4770 e sistema operacional Linux.
+Medimos o tempo real (\emph{wall-clock time}) da execução usando o programa \texttt{time}.
+Para cada instancia do problema, foram realizadas 10 medições e apenas o menor tempo foi considerado.
 
 %-------------------------------------------------------------------------------
 \section{Problema da Mochila com Frações}
 
 \subsection{Pseudocódigo}
 
-Propomos o algoritmo \ref{alg:q1} para obter a solução ótima para este problema
+Propomos o algoritmo \ref{alg:q1} para obter a solução ótima para esta versão do problema.
 
-\begin{algorithm}[H]
+\begin{algorithm}[htb]
 \begin{algorithmic}[1]
   \Function{FractionalKnapsack}{$itens, n, W$}
     \For{$i \gets 1, n$}
       \State {$itens[i].ratio \gets itens[i].weight / itens[i].value$}
     \EndFor
     \State {Order $itens$ using the $ratio$ field}
-    \State $selected \gets EmptyList()$
+    \State $selected \gets $ empty list
     \State $w \gets 0$
     \For{$i \gets 1, n$}
       \If{$w \ge W$}
@@ -80,27 +91,75 @@ Propomos o algoritmo \ref{alg:q1} para obter a solução ótima para este proble
 
 \subsubsection{Prova que o Algoritmo é Ótimo}
 
-TODO.
+Dado o problema da mochila fracionária representado por $P$, um conjunto de itens $I = \{i_1,\ldots,i_n\}$ e uma capacidade $W$ da mochila, sabemos que $P$ admite uma solução ótima dada por $O = \{o_1,\ldots,o_k\}$.
+Existe ainda uma solução $G = \{g_1,\ldots,g_j\}$ obtida através da execução do algoritmo guloso.
+$G$, portanto, segue o critério de ordenação descendente dos itens em função da razão $R(i)$, calculada dividindo o valor do item pelo seu peso.
+Sendo assim, $R(g_i) \ge R(g_{i+1})$ para todo $i = 1\ldots j-1$.
+
+Queremos provar que a solução do algoritmo guloso $G$ faz parte do conjunto das soluções ótimas do problema $P$.
+
+\begin{lemma}
+O item $g_1$ da solução gulosa pertence a alguma solução ótima $O'$.
+
+Caso 1: $g_1$ é adicionado por inteiro.
+Se $g_1$ pertence a $O$, $O' = O$. Se o item não pertencer a solução $O$, podemos retirar de $O$ frações que somem o mesmo peso de $g_1$ e então inserir $g_1$.
+Dessa forma, teremos uma solução ótima $O'$ que possui o mesmo valor de $O' = O \cup \{g_1\}$.
+É trivial observar que se $O$ não possuir frações de itens com mesma razão que $g_1$, $O$ não seria uma solução ótima.
+
+Caso 2: $g_1$ é adicionado de forma fracionária, onde $f_1 =$ fração de $g_1$.
+Se $f_1 \cdot peso(g_1)$ pertence a $O$, $O' = O$. 
+Se $O$ não contém $f_1 \cdot peso(g_1)$, assim como o item anterior, podemos trocar o equivalente de $f_1 \cdot peso(g_1)$ em $O$ e obter uma solução ótima $O'$.
+\end{lemma}
+
+\begin{lemma}
+Agora queremos provar que a solução $O' - {g_1}$ é igual a solução de um novo problema dado por $P'$ que contém os itens $I' = I - {g_1}$ e capacidade da mochila dada por $W' = W - peso(g_1)$.
+
+Vamos provar por contradição que $O'' = O' - {g1}$, no qual $O'$ corresponde às soluções obtidas no lema 1.
+
+Assumindo que $O''$ não é solução ótima para o problema $P'$. Então $P'$ admite uma solução $Y > O''$. Seja $X = Y \cup \{g_1\}$, e $O'$ possui valor igual a $O'' \cup \{g_1\}$. Dessa forma teremos em $X > O'$ uma contradição, dado que O' é uma solução ótima.
+\end{lemma}
+
+De forma iterativa e com base no Lema 2, mostramos que o resultado do algoritmo guloso é uma solução ótima para a versão fracionária do problema da mochila.
 
 \subsection{Avaliação da Complexidade}
 
-TODO.
+A complexidade do algoritmo proposto pode ser distribuída em dois momentos.
+O primeiro deles é referente à ordenação dos itens em função da razão entre o peso e o valor de cada item candidato.
+Sabemos que o problema de ordenação pode ser resolvido em $\theta(nlogn)$, logo essa é a complexidade dessa primeira parte do algoritmo.
+
+A segunda etapa consiste em iterar pela lista ordenada e a cada passo adicionar o item com \emph{menor} razão.
+Dentro do laço de iteração são tratados os casos que garantem que a soma dos itens selecionados não ultrapasse a capacidade da mochila.
+Como são apenas realizadas operações constantes para cada passo do \emph{loop}, a complexidade dessa parte é $\theta(n)$.
+
+Sendo assim, o algoritmo possui complexidade $\theta(n  + nlogn)$ e, portanto, pode ser resolvido em $\theta(nlogn)$.
 
 \subsection{Testes de Desempenho}
 
-\begin{table}[H]
+A tabela \ref{tab:q1:bench} apresenta os resultados obtidos para a implementação da primeira questão.
+Como era esperado, a variação do peso aceito pela mochila não influencia na complexidade do algoritmo.
+Com base na figura \ref{fig:q1:itens}, observamos que a relação entre o número de itens e o tempo de execução é próxima a função $nlog(n)$.
+Dessa forma, concluímos que os resultados obtidos estão de acordo com a complexidade avaliada no item anterior.
+
+\begin{table}[htb]
 \centering
 \begin{tabular}{c|c|c|c|c}
-Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+Itens & W=1000 & W=2000 & W=5000 & W=10000 \\
 \hline
-120 & 0.020	& 0.020	& 0.020	& 0.020	\\
-250 & 0.021	& 0.021	& 0.021	& 0.021	\\
-500 & 0.024	& 0.024	& 0.024	& 0.025	\\
-1000 & 0.035	& 0.035	& 0.035	& 0.035	\\
+120 & 0.020s    & 0.020s    & 0.020s    & 0.020s    \\
+250 & 0.021s    & 0.021s    & 0.021s    & 0.021s    \\
+500 & 0.024s    & 0.024s    & 0.024s    & 0.025s    \\
+1000 & 0.035s   & 0.035s    & 0.035s    & 0.035s    \\
 \end{tabular}
-\caption{Medida do tempo de execução (em segundos) implementação da questão 1 para as instâncias disponibilizados.}
+\caption{Medida do tempo de execução (em segundos) da implementação da questão 1 para as instâncias disponibilizadas.}
 \label{tab:q1:bench}
 \end{table}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.5\linewidth]{plots/q1itens}
+\caption{Variação do tempo de execução em relação ao número de itens.}
+\label{fig:q1:itens}
+\end{figure}
 
 %-------------------------------------------------------------------------------
 \section{Problema da Mochila com Inteiros}
@@ -113,12 +172,12 @@ O algoritmo da questão anterior não retorna a solução ótima em todos os cas
 
 Propomos o algoritmo \ref{alg:q2}, que utiliza programação dinâmica, para obter a solução ótima para este problema.
 
-\begin{algorithm}[H]
+\begin{algorithm}[htb]
 \begin{algorithmic}[1]
   \Function{IntegerKnapsack}{$itens, n, W$}
     \State \Comment{Initialization:} \label{alg:q2:init:start}
-    \State $M \gets ZeroedMatrix(n, W)$ \Comment{Optimum profit}
-    \State $S \gets ZeroedMatrix(n, W)$ \Comment{Selected itens} \label{alg:q2:init:end}
+    \State $M \gets zeroed matrix(n, W)$ \Comment{Optimum profit}
+    \State $S \gets zeroed matrix(n, W)$ \Comment{Selected itens} \label{alg:q2:init:end}
     \State \Comment{Find the best solution for each subproblem:} \label{alg:q2:calcopt:start}
     \For{$i \gets 1, n$}
       \For{$w \gets 1, W$}
@@ -138,7 +197,7 @@ Propomos o algoritmo \ref{alg:q2}, que utiliza programação dinâmica, para obt
       \EndFor
     \EndFor \label{alg:q2:calcopt:end}
     \State \Comment{Build the list of selected itens:} \label{alg:q2:select:start}
-    \State $selected \gets EmptyList()$
+    \State $selected \gets $ empty list
     \State $w \gets M[n, W]$
     \For{$i \gets n, 1$}
       \If{$S[i, w] == 1$}
@@ -155,32 +214,32 @@ Propomos o algoritmo \ref{alg:q2}, que utiliza programação dinâmica, para obt
 
 \subsubsection{Avaliação da Complexidade}
 
-O primeiro trexo do algoritmo \algsection{q2}{init} cria duas matrizes de tamanho $n \times W$, percorre todas as suas posições e as inicializa com 0. Entretanto, como o tamanho da matrix varia de acordo com o \emph{valor} de $W$, não podemos avaliar a complexidade como $\theta(nW)$. Definimos K como o tamanho (número de bits) de $W$ e sabemos que $W \approx 2^K$. Logo, levando em conta o \emph{tamanho} de $W$, a complexidade desse trecho é de $\theta(n2^K)$. O segundo trecho \algsection{q2}{calcopt} realiza uma sério de operações em tempo constante para cada posição da matrix $M$, logo a complexidade desse último também é $\theta(n2^K)$. Por fim, o terceiro trecho \algsection{q2}{select} percorre a lista de itens e insere (operação constante) os selecionadas na lista de saída. No pior caso, todos os itens são seleciodados e toda a lista de entrada é percorrida, logo avaliamos a complexidade como $\theta(n)$. A complexidade da função é a soma da complexidade dos três trechos: $T(n, K) \in \theta(n2^K + n2^K + n) \in \theta(n2^K)$.
+O primeiro trecho do algoritmo \algsection{q2}{init} cria duas matrizes de tamanho $n \times W$, percorre todas as suas posições e as inicializa com 0. Entretanto, como o tamanho da matriz varia de acordo com o \emph{valor} de $W$, não podemos avaliar a complexidade como $\theta(nW)$. Definimos K como o tamanho (número de bits) de $W$ e sabemos que $W \approx 2^K$. Logo, levando em conta o \emph{tamanho} de $W$, a complexidade desse trecho é de $\theta(n2^K)$. O segundo trecho \algsection{q2}{calcopt} realiza uma série de operações em tempo constante para cada posição da matriz $M$, logo a complexidade desse último também é $\theta(n2^K)$. Por fim, o terceiro trecho \algsection{q2}{select} percorre a lista de itens e insere (operação constante) os selecionadas na lista de saída. No pior caso, todos os itens são selecionados e toda a lista de entrada é percorrida, logo avaliamos a complexidade como $\theta(n)$. A complexidade da função é a soma da complexidade dos três trechos: $T(n, K) \in \theta(n2^K + n2^K + n) \in \theta(n2^K)$.
 
 \subsection{Avaliação do Desempenho}
 
-A tabela \ref{tab:q2:bench} apresenta o tempo de execução do programa implementado para as instâncias providas.
-Com base no gráfico da esqueda na figura \ref{fig:q2:itens}, podemos confirmar que o tempo de execução cresce linearmente em relação ao número de itens. Com base no gráfico da direita, observamos que o tempo de execução cresce linearmente em relação ao peso aceito pela mochila. Consequentemente, o tempo de execução cresce exponencialmente em relação ao tamanho (número de bits) desse peso.
+A tabela \ref{tab:q2:bench} apresenta o tempo de execução do programa implementado para as instâncias fornecidas.
+Com base no gráfico da esquerda na figura \ref{fig:q2:itens}, podemos confirmar que o tempo de execução cresce linearmente em relação ao número de itens. Igualmente, a partir do gráfico da direita, observamos que o tempo de execução cresce linearmente em relação à capacidade da mochila. Dessa forma, o tempo de execução cresce exponencialmente em relação ao tamanho K (número de bits) desse peso.
 
-\begin{table}[H]
+\begin{table}[htb]
 \centering
 \begin{tabular}{c|c|c|c|c}
-Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
+Itens & W=1000 & W=2000 & W=5000 & W=10000 \\
 \hline
-120 & 0.069& 0.123& 0.290& 0.594 \\
-250 & 0.123& 0.234& 0.578& 1.184 \\
-500 & 0.241& 0.476& 1.196& 2.397 \\
-1000 & 0.482& 0.963& 2.432& 4.911 \\
+120 & 0.069s& 0.123s& 0.290s& 0.594s \\
+250 & 0.123s& 0.234s& 0.578s& 1.184s \\
+500 & 0.241s& 0.476s& 1.196s& 2.397s \\
+1000 & 0.482s& 0.963s& 2.432s& 4.911s \\
 \end{tabular}
-\caption{Medida do tempo de execução (em segundos) implementação da questão 2 para as instâncias disponibilizados.}
+\caption{Medida do tempo de execução (em segundos) da implementação da questão 2 para as instâncias disponibilizadas.}
 \label{tab:q2:bench}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\linewidth]{plots/q2itens}
 \includegraphics[width=0.49\linewidth]{plots/q2weight}
-\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
+\caption{Variação do tempo de execução em relação ao número de itens e ao peso aceito pela mochila.}
 \label{fig:q2:itens}
 \end{figure}
 
@@ -189,23 +248,23 @@ Número de itens & W=1000 & W=2000 & W=5000 & W=10000 \\
 
 \subsection{Algoritmo Proposto}
 
-Para esta versão do problema da mochila propomos quatro diferentes heurísticas, apresentadas na tabela \ref{tab:q3:heuristics}. O algoritmo \ref{alg:q3} gera um conjunto de itens para cada heurística e escolhe o de maior lucro.
+A proposta que trazemos para a resolução deste problema consiste em usar diferentes heurísticas e retornar o melhor resultado. Sendo assim, é possível que o algoritmo utilize uma heurística diferente a cada entrada. As quatro heurísticas que usamos são apresentadas na tabela \ref{tab:q3:heuristics}. A partir daí a solução segue a estrutura do algoritmo guloso da questão 1, em que os itens são adicionados na mochila com as restrições que o problema apresenta. A cada item a ser adicionado são verificados se ao adicioná-lo o peso da mochila excede o limite e se o mesmo não possui conflito com os itens já adicionados. O algoritmo \ref{alg:q3} descreve detalhadamente tal solução.
 
-\begin{table}[H]
+\begin{table}[htb]
 \centering
-\renewcommand{\arraystretch}{2.5}
-\begin{tabular}{c|c}
-Heurística & Fórmula \\\hline
-H1 & $\dfrac{peso}{valor}$ \\
-H2 & $\dfrac{1}{valor}$ \\
-H3 & $\sum^{conflitos}_{c} c.valor$ \\
-H4 & $\dfrac{1}{\sum^{conflitos}_{c}\dfrac{c.peso}{c.valor}}$ \\
+\renewcommand{\arraystretch}{2}
+\begin{tabular}{c|c|c|c}
+H1 & H2 & H3 & H4 \\\hline
+$\dfrac{peso}{valor}$ &
+$\dfrac{1}{valor}$ &
+$\sum^{conflitos}_{c} c.valor$ &
+$\dfrac{1}{\sum^{conflitos}_{c}\dfrac{c.peso}{c.valor}}$ \\
 \end{tabular}
 \caption{Heurísticas utilizadas para resolver o problema da mochila com conflitos.}
 \label{tab:q3:heuristics}
 \end{table}
 
-\begin{algorithm}[H]
+\begin{algorithm}[htb]
 \begin{algorithmic}[1]
   \State \Comment{Obtains the group of itens using the heuristic H:}
   \Function{ConflictsKnapsackHelper}{$itens, n, W, H$}
@@ -213,11 +272,11 @@ H4 & $\dfrac{1}{\sum^{conflitos}_{c}\dfrac{c.peso}{c.valor}}$ \\
       \State {$itens[i].heuristic \gets H(itens[i])$}
     \EndFor \label{alg:q3:heuristics:end}
     \State {Order $itens$ using the $heuristic$ field} \label{alg:q3:sort}
-    \State $hasconflict \gets EmptyList()$ \label{alg:q3:init:start}
+    \State $hasconflict \gets $empty list \label{alg:q3:init:start}
     \For{$i \gets 1, n$}
       \State $hasconflict[i] \gets False$
     \EndFor
-    \State $selected \gets EmptyList()$
+    \State $selected \gets $ empty list
     \State $w \gets 0$ \label{alg:q3:init:end}
     \For{$i \gets 1, n$} \label{alg:q3:select:start}
       \If{$!hasconflict[itens[i].index] \textrm{ \textbf{and} } itens[i].weight + w \le W$}
@@ -256,34 +315,30 @@ A função \emph{ConflictsKnapsack} apenas chama a função \emph{ConflictsKnaps
 
 \subsection{Avaliação do Desempenho}
 
-\begin{table}[H]
+A tabela \ref{tab:q3:bench} apresenta os resultados obtidos ao rodar as instâncias providas para o problema 3.
+Como era esperado, notamos que o tamanho aceito pela mochila não influencia na complexidade do algoritmo.
+Já com base na figura \ref{fig:q3:itens}, podemos observar que o tempo de execução é de fato linear em relação ao número de conflitos.
+Por fim, dado que o número de conflitos nas instâncias é bem maior que o número de itens, acreditamos que este último não seja significativo para nossas comparações.
+
+\begin{table}[htb]
 \centering
 \begin{tabular}{c|c|c|c|c|c}
 Itens & Conflitos & W=1000 & W=2000 & W=5000 & W=10000 \\
 \hline
-120 & 3570 & 0.023	& 0.023	& 0.022	& 0.023	\\
-250 & 15562 & 0.034	& 0.034	& 0.034	& 0.034	\\
-500 & 62375 & 0.079	& 0.079	& 0.079	& 0.079	\\
-1000 & 249750 & 0.324	& 0.321	& 0.325	& 0.325	\\
+120 & 3570 & 0.023s & 0.023s    & 0.022s    & 0.023s    \\
+250 & 15562 & 0.034s    & 0.034s    & 0.034s    & 0.034s    \\
+500 & 62375 & 0.079s    & 0.079s    & 0.079s    & 0.079s    \\
+1000 & 249750 & 0.324s  & 0.321s    & 0.325s    & 0.325s    \\
 \end{tabular}
-\caption{Medida do tempo de execução (em segundos) implementação da questão 3 para as instâncias disponibilizados.}
+\caption{Medida do tempo de execução (em segundos) da implementação da questão 3 para as instâncias disponibilizadas.}
 \label{tab:q3:bench}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{plots/q1itens}
-\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
-\label{fig:q1:itens}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\linewidth]{plots/q3itens}
-\caption{Variação do tempo de execução de acordo com o número de itens e com o peso aceito pela mochila.}
+\includegraphics[width=0.5\linewidth]{plots/q3itens}
+\caption{Variação do tempo de execução em relação ao número de conflitos.}
 \label{fig:q3:itens}
 \end{figure}
 
-
 \end{document}
-
